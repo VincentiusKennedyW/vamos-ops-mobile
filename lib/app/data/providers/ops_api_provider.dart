@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:get/get.dart';
-
-import '../../core/config/app_config.dart';
-import '../../core/services/device_services.dart';
-import '../../core/storage/session_store.dart';
+import 'package:vamos_ops_mobile/app/core/config/app_config.dart';
+import 'package:vamos_ops_mobile/app/core/services/device_services.dart';
+import 'package:vamos_ops_mobile/app/core/storage/session_store.dart';
 
 class OpsApiProvider extends GetConnect {
   OpsApiProvider([this._sessionStore]);

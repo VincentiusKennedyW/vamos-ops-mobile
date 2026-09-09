@@ -8,7 +8,7 @@ import 'package:vamos_ops_mobile/app/modules/auth/data/auth_api_provider.dart';
 import 'package:vamos_ops_mobile/app/modules/auth/data/auth_repository.dart';
 import 'package:vamos_ops_mobile/app/modules/auth/models/auth_session.dart';
 import 'package:vamos_ops_mobile/app/routes/app_routes.dart';
-import 'package:vamos_ops_mobile/vamos_app.dart';
+import 'package:vamos_ops_mobile/app/vamos_app.dart';
 
 void main() {
   setUp(() => Get.testMode = true);

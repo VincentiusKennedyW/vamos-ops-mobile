@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'vamos_app.dart';
+import 'package:vamos_ops_mobile/app/vamos_app.dart';
 
 void main() {
   runApp(const VamosApp());

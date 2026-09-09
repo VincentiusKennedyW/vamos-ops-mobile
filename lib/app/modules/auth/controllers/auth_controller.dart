@@ -1,10 +1,9 @@
 import 'package:get/get.dart';
-import '../../../core/services/ops_cache.dart';
-
-import '../../../core/errors/api_exception.dart';
-import '../../../routes/app_routes.dart';
-import '../data/auth_repository.dart';
-import '../models/auth_session.dart';
+import 'package:vamos_ops_mobile/app/core/errors/api_exception.dart';
+import 'package:vamos_ops_mobile/app/core/services/ops_cache.dart';
+import 'package:vamos_ops_mobile/app/modules/auth/data/auth_repository.dart';
+import 'package:vamos_ops_mobile/app/modules/auth/models/auth_session.dart';
+import 'package:vamos_ops_mobile/app/routes/app_routes.dart';
 
 class AuthController extends GetxController {
   AuthController(this._repository);

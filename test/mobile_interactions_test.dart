@@ -3,11 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:vamos_ops_mobile/app/core/errors/api_exception.dart';
 import 'package:vamos_ops_mobile/app/core/services/device_services.dart';
-import 'package:vamos_ops_mobile/app/data/repositories/ops_repository.dart';
+import 'package:vamos_ops_mobile/app/data/models/staff_home_data.dart';
+import 'package:vamos_ops_mobile/app/data/repositories/ops_repository_contract.dart';
+import 'package:vamos_ops_mobile/app/modules/attendance/views/handover_sheet.dart';
+import 'package:vamos_ops_mobile/app/modules/home/views/home_screen.dart';
+import 'package:vamos_ops_mobile/app/modules/profile/views/me_screen.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/models/ops_report.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/views/report_form_sheet.dart';
 import 'package:vamos_ops_mobile/app/modules/staff/controllers/staff_controller.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/models/ops_task.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/models/task_evidence.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/views/create_task_sheet.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/views/task_detail_sheet.dart';
 import 'package:vamos_ops_mobile/app/routes/app_routes.dart';
-import 'package:vamos_ops_mobile/data.dart';
-import 'package:vamos_ops_mobile/vamos_app.dart';
+import 'package:vamos_ops_mobile/app/vamos_app.dart';
 
 void main() {
   setUp(() => Get.testMode = true);

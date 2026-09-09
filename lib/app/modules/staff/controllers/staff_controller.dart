@@ -1,10 +1,16 @@
 import 'package:get/get.dart';
-import '../../../core/services/ops_cache.dart';
-
-import '../../../core/errors/api_exception.dart';
-import '../../../core/services/device_services.dart';
-import '../../../data/repositories/ops_repository.dart';
-import '../../../../data.dart';
+import 'package:vamos_ops_mobile/app/core/errors/api_exception.dart';
+import 'package:vamos_ops_mobile/app/core/services/device_services.dart';
+import 'package:vamos_ops_mobile/app/core/services/ops_cache.dart';
+import 'package:vamos_ops_mobile/app/core/utils/operational_date.dart';
+import 'package:vamos_ops_mobile/app/data/models/ops_area.dart';
+import 'package:vamos_ops_mobile/app/data/models/staff_performance.dart';
+import 'package:vamos_ops_mobile/app/data/repositories/ops_repository_contract.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/controllers/report_list_controller.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/models/ops_report.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/controllers/task_list_controller.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/models/ops_task.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/models/task_evidence.dart';
 
 class StaffController extends GetxController {
   StaffController(
@@ -35,25 +41,32 @@ class StaffController extends GetxController {
   final checkInAt = Rxn<DateTime>();
   final checkOutAt = Rxn<DateTime>();
   final tasks = <OpsTask>[].obs;
-  final reports = <OpsReport>[].obs;
-  final taskList = <OpsTask>[].obs;
-  final taskDate = DateTime.now().obs;
+
   final today = DateTime.now().obs;
-  final taskScope = 'day'.obs;
-  final taskFrom = Rxn<DateTime>(), taskTo = Rxn<DateTime>();
+
   final areas = <OpsArea>[].obs;
   final areasLoading = false.obs;
   final areasError = RxnString();
-  String _activeTaskKey = '';
-  final tasksLoading = false.obs, reportsLoading = false.obs;
-  final tasksHasMore = false.obs, reportsHasMore = false.obs;
-  final tasksError = RxnString(), reportsError = RxnString();
+
   final assignedCount = 0.obs, completedToday = 0.obs;
-  int _taskPage = 1,
-      _reportPage = 1,
-      _taskGeneration = 0,
-      _reportGeneration = 0;
-  bool _dateInitialized = false;
+
+  // These collaborators own query state. The staff coordinator owns cross-feature
+  // mutations and home aggregates so optimistic updates have one source of truth.
+  late final taskQueries = TaskListController(_repository, _cache, tasks);
+  late final reportQueries = ReportListController(_repository, _cache);
+
+  RxList<OpsTask> get taskList => taskQueries.taskList;
+  Rx<DateTime> get taskDate => taskQueries.taskDate;
+  RxString get taskScope => taskQueries.taskScope;
+  Rxn<DateTime> get taskFrom => taskQueries.taskFrom;
+  Rxn<DateTime> get taskTo => taskQueries.taskTo;
+  RxBool get tasksLoading => taskQueries.tasksLoading;
+  RxBool get tasksHasMore => taskQueries.tasksHasMore;
+  RxnString get tasksError => taskQueries.tasksError;
+  RxList<OpsReport> get reports => reportQueries.reports;
+  RxBool get reportsLoading => reportQueries.reportsLoading;
+  RxBool get reportsHasMore => reportQueries.reportsHasMore;
+  RxnString get reportsError => reportQueries.reportsError;
 
   Future<void> loadTasks({
     DateTime? date,
@@ -62,150 +75,18 @@ class StaffController extends GetxController {
     DateTime? to,
     bool more = false,
     bool refresh = false,
-  }) async {
-    if (more && (tasksLoading.value || !tasksHasMore.value)) return;
-    if (date != null) {
-      taskDate.value = date;
-      taskScope.value = 'day';
-    }
-    if (scope != null) taskScope.value = scope;
-    if (from != null) taskFrom.value = from;
-    if (to != null) taskTo.value = to;
-    final epoch = _cache.epoch;
-    final dateValue = taskDate.value.toIso8601String().substring(0, 10);
-    final fromValue = taskFrom.value?.toIso8601String().substring(0, 10);
-    final toValue = taskTo.value?.toIso8601String().substring(0, 10);
-    final key = switch (taskScope.value) {
-      'all' => 'tasks/all',
-      'range' => 'tasks/range/$fromValue/$toValue',
-      _ => 'tasks/day/$dateValue',
-    };
-    if (!more) {
-      final cached = _cache.read<CachedList<OpsTask>>(key);
-      if (key != _activeTaskKey) {
-        taskList.assignAll(cached?.items ?? []);
-        _taskPage = cached?.page ?? 1;
-        tasksHasMore.value = cached?.hasMore ?? false;
-      }
-      _activeTaskKey = key;
-      if (!refresh && cached != null) {
-        tasksError.value = null;
-        tasksLoading.value = false;
-        return;
-      }
-      _taskPage = 1;
-    }
-    final generation = ++_taskGeneration;
-    final page = more ? _taskPage + 1 : 1;
-    tasksLoading.value = true;
-    tasksError.value = null;
-    try {
-      final repo = _repository;
-      if (repo is! PagedOpsRepositoryContract) {
-        taskList.assignAll(tasks);
-        return;
-      }
-      final from = taskScope.value == 'range' ? fromValue : null;
-      final to = taskScope.value == 'range' ? toValue : null;
-      final allDates = taskScope.value == 'all';
-      final pages = await Future.wait([
-        for (var p = more ? page : 1; p <= page; p++)
-          (repo as PagedOpsRepositoryContract).getTasks(
-            dateValue,
-            p,
-            'all',
-            from: from,
-            to: to,
-            allDates: allDates,
-          ),
-      ]);
-      final result = OpsPage(
-        pages.expand((p) => p.items).toList(),
-        hasMore: pages.last.hasMore,
-      );
-      if (generation != _taskGeneration || isClosed || epoch != _cache.epoch) {
-        return;
-      }
-      if (more) {
-        final ids = taskList.map((t) => t.id).toSet();
-        taskList.addAll(result.items.where((t) => !ids.contains(t.id)));
-      } else {
-        taskList.assignAll(result.items);
-      }
-      _taskPage = page;
-      tasksHasMore.value = result.hasMore;
-      if (page <= 10) {
-        _cache.write(key, CachedList(taskList, page, result.hasMore));
-      }
-    } catch (error) {
-      if (generation == _taskGeneration) {
-        tasksError.value = error is ApiException
-            ? error.message
-            : 'Task gagal dimuat. Coba lagi.';
-      }
-    } finally {
-      if (generation == _taskGeneration) tasksLoading.value = false;
-    }
-  }
-
-  Future<void> loadReports({bool more = false, bool refresh = false}) async {
-    if (more && (reportsLoading.value || !reportsHasMore.value)) return;
-    final epoch = _cache.epoch;
-    if (!more) {
-      final cached = _cache.read<CachedList<OpsReport>>('reports');
-      if (cached != null) {
-        reports.assignAll(cached.items);
-        _reportPage = cached.page;
-        reportsHasMore.value = cached.hasMore;
-        if (!refresh) {
-          reportsError.value = null;
-          reportsLoading.value = false;
-          return;
-        }
-      }
-      _reportPage = 1;
-    }
-    final generation = ++_reportGeneration;
-    final page = more ? _reportPage + 1 : 1;
-    reportsLoading.value = true;
-    reportsError.value = null;
-    try {
-      final repo = _repository;
-      if (repo is! PagedOpsRepositoryContract) return;
-      final pages = await Future.wait([
-        for (var p = more ? page : 1; p <= page; p++)
-          (repo as PagedOpsRepositoryContract).getReports(p),
-      ]);
-      final result = OpsPage(
-        pages.expand((p) => p.items).toList(),
-        hasMore: pages.last.hasMore,
-      );
-      if (generation != _reportGeneration ||
-          isClosed ||
-          epoch != _cache.epoch) {
-        return;
-      }
-      if (more) {
-        final ids = reports.map((r) => r.id).toSet();
-        reports.addAll(result.items.where((r) => !ids.contains(r.id)));
-      } else {
-        reports.assignAll(result.items);
-      }
-      _reportPage = page;
-      reportsHasMore.value = result.hasMore;
-      if (page <= 10) {
-        _cache.write('reports', CachedList(reports, page, result.hasMore));
-      }
-    } catch (error) {
-      if (generation == _reportGeneration) {
-        reportsError.value = error is ApiException
-            ? error.message
-            : 'Report gagal dimuat. Coba lagi.';
-      }
-    } finally {
-      if (generation == _reportGeneration) reportsLoading.value = false;
-    }
-  }
+  }) => taskQueries.loadTasks(
+    date: date,
+    scope: scope,
+    from: from,
+    to: to,
+    more: more,
+    refresh: refresh,
+  );
+  Future<void> loadReports({bool more = false, bool refresh = false}) =>
+      reportQueries.loadReports(more: more, refresh: refresh);
+  Future<OpsReport> reportDetail(OpsReport report, {bool refresh = false}) =>
+      reportQueries.reportDetail(report, refresh: refresh);
 
   Future<void> loadAreas() async {
     if (areasLoading.value) return;
@@ -235,32 +116,12 @@ class StaffController extends GetxController {
 
   @override
   void onClose() {
-    _taskGeneration++;
-    _reportGeneration++;
+    taskQueries.dispose();
+    reportQueries.dispose();
     super.onClose();
   }
 
   Future<OpsTask> taskDetail(OpsTask task) async => task;
-
-  Future<OpsReport> reportDetail(
-    OpsReport report, {
-    bool refresh = false,
-  }) async {
-    final key = 'report/${report.id}';
-    final cached = _cache.read<OpsReport>(key);
-    if (!refresh && cached != null) return cached;
-    if (!refresh && report.detailLoaded) {
-      _cache.write(key, report);
-      return report;
-    }
-    final repo = _repository;
-    if (repo is! ReportDetailRepositoryContract) return report;
-    final detail = await (repo as ReportDetailRepositoryContract).getReport(
-      report.id,
-    );
-    if (!isClosed) _cache.write(key, detail);
-    return detail;
-  }
 
   final performance = const StaffPerformance().obs;
 
@@ -273,37 +134,7 @@ class StaffController extends GetxController {
     if (homeIndex >= 0) tasks[homeIndex] = replacement;
     final listIndex = taskList.indexWhere((item) => item.id == id);
     if (listIndex >= 0) taskList[listIndex] = replacement;
-    _persistActiveTaskList();
-  }
-
-  void _persistActiveTaskList() {
-    if (_activeTaskKey.isEmpty || _taskPage > 10) return;
-    _cache.write(
-      _activeTaskKey,
-      CachedList(taskList.toList(), _taskPage, tasksHasMore.value),
-    );
-  }
-
-  bool _sameDate(DateTime left, DateTime right) =>
-      left.year == right.year &&
-      left.month == right.month &&
-      left.day == right.day;
-
-  bool _visibleInActiveTaskQuery(DateTime scheduledAt) {
-    if (taskScope.value == 'all') return true;
-    if (taskScope.value == 'range') {
-      final from = taskFrom.value, to = taskTo.value;
-      if (from == null || to == null) return false;
-      final date = DateTime(
-        scheduledAt.year,
-        scheduledAt.month,
-        scheduledAt.day,
-      );
-      final start = DateTime(from.year, from.month, from.day);
-      final end = DateTime(to.year, to.month, to.day);
-      return !date.isBefore(start) && !date.isAfter(end);
-    }
-    return _sameDate(scheduledAt, taskDate.value);
+    taskQueries.persist();
   }
 
   @override
@@ -326,30 +157,8 @@ class StaffController extends GetxController {
       checkOutAt.value = home.checkOutAt;
       tasks.assignAll(home.tasks);
       today.value = home.today ?? DateTime.now();
-      final todayKey =
-          'tasks/day/${today.value.toIso8601String().substring(0, 10)}';
-      final homeTasks = CachedList(home.tasks, 1, home.tasks.length >= 20);
-      _cache.write(todayKey, homeTasks);
-      if (!_dateInitialized) {
-        taskDate.value = today.value;
-        _dateInitialized = true;
-        taskScope.value = 'day';
-        _activeTaskKey = todayKey;
-        taskList.assignAll(home.tasks);
-        _taskPage = 1;
-        tasksHasMore.value = homeTasks.hasMore;
-      } else if (_activeTaskKey == todayKey) {
-        taskList.assignAll(home.tasks);
-        _taskPage = 1;
-        tasksHasMore.value = homeTasks.hasMore;
-      }
-      reports.assignAll(home.reports);
-      _reportPage = 1;
-      reportsHasMore.value = home.reports.length >= 20;
-      _cache.write(
-        'reports',
-        CachedList(home.reports, 1, reportsHasMore.value),
-      );
+      taskQueries.seedHome(home.tasks, today.value);
+      reportQueries.seedHome(home.reports);
       assignedCount.value = home.assignedCount ?? home.tasks.length;
       completedToday.value =
           home.completedCount ??
@@ -413,7 +222,7 @@ class StaffController extends GetxController {
       tasks.assignAll(previousHome);
       taskList.assignAll(previousList);
       completedToday.value = previousCompleted;
-      _persistActiveTaskList();
+      taskQueries.persist();
       _showError(error);
       return false;
     } finally {
@@ -445,13 +254,13 @@ class StaffController extends GetxController {
       'scheduledAt': scheduledAt.toIso8601String(),
       'dueAt': dueAt.toIso8601String(),
     });
-    if (_sameDate(scheduledAt, today.value)) {
+    if (sameOperationalDate(scheduledAt, today.value)) {
       tasks.insert(0, optimistic);
       assignedCount.value++;
     }
-    if (_visibleInActiveTaskQuery(scheduledAt)) {
+    if (taskQueries.containsDate(scheduledAt)) {
       taskList.insert(0, optimistic);
-      _persistActiveTaskList();
+      taskQueries.persist();
     }
 
     isMutating.value = true;
@@ -472,7 +281,7 @@ class StaffController extends GetxController {
       tasks.assignAll(previousHome);
       taskList.assignAll(previousList);
       assignedCount.value = previousAssigned;
-      _persistActiveTaskList();
+      taskQueries.persist();
       _showError(error);
       return false;
     } finally {

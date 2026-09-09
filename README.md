@@ -1,37 +1,54 @@
 # VAMOS OPS Mobile
 
-Aplikasi staff Flutter yang terhubung ke API VAMOS OPS. State, dependency injection, dan navigation menggunakan GetX dengan boundary `provider → repository → controller → view`.
+Flutter staff app for attendance, assigned/personal tasks, evidence, reports, and handover. GetX provides state, dependency injection, and navigation. It consumes the dashboard's existing `/api/v1` contract.
 
-## Struktur
+## Structure
 
-- `lib/app/data/providers` — komunikasi HTTP melalui `GetConnect`.
-- `lib/app/data/repositories` — kontrak data agar controller dapat diuji tanpa network.
-- `lib/app/modules/staff/controllers` — state reaktif dan orchestration use case.
-- `lib/app/modules/staff/bindings` — dependency injection per route.
-- `lib/app/routes` — named route.
-- `lib/vamos_app.dart` — presentation/widget staff.
-
-## Menjalankan
-
-Pastikan PostgreSQL dan dashboard API sudah berjalan. Untuk HP fisik pada Wi-Fi yang sama, proyek ini secara default memakai API laptop pada `192.168.1.4`:
-
-```bash
-flutter run --dart-define=API_BASE_URL=http://192.168.1.4:3000/api/v1
+```text
+lib/main.dart                   Process entry point
+lib/app/vamos_app.dart          GetMaterialApp configuration
+lib/app/bindings/               Application-wide service registration
+lib/app/routes/                 Route names and page registration
+lib/app/core/                   Config, errors, cache, device services, storage, theme
+lib/app/data/models/            Shared page, area, home, and performance models
+lib/app/data/providers/         Authenticated transport and response decoding
+lib/app/data/repositories/      Injection contracts and aggregate API implementation
+lib/app/widgets/                Shared UI, feedback, pagination, evidence photos
+lib/app/modules/auth/           Authentication provider/repository/controller/views
+lib/app/modules/staff/          Staff binding, shell, home and mutation coordination
+lib/app/modules/home/           Home screen and summary widgets
+lib/app/modules/tasks/          Task models, query controller, views/forms/widgets
+lib/app/modules/reports/        Report models, query controller, views/forms/widgets
+lib/app/modules/attendance/     Attendance card and handover sheet
+lib/app/modules/profile/        Profile and app-settings views
+test/support/                   Shared fake repositories, camera, and task fixture
 ```
 
-Uji `http://192.168.1.4:3000/api/health` dari browser HP terlebih dahulu. Android emulator menggunakan alias `10.0.2.2` untuk host komputer:
+The provider handles HTTP; the repository decodes API responses behind injectable contracts; controllers own reactive state; views render it. Feature files use direct package imports. Keep private widget State classes beside their widget and expose sheet entry functions instead of a shared Dart `part` library.
 
-```bash
+`TaskListController` owns task period selection, pagination, and list cache. `ReportListController` owns report pagination/detail cache. `StaffController` owns home aggregates and operations that coordinate tasks, attendance, evidence, and reports. It exposes the collaborators' existing reactive values without copying them and disposes them with the staff session. This keeps optimistic updates, rollback, generation guards, and cache behavior consistent.
+
+`AppBinding` registers permanent infrastructure. `StaffBinding` registers route-level staff state. Both retain injectable contracts for tests. Shared HTTP response decoding and DTO parsing belong to the data layer, not widgets.
+
+## Development
+
+```sh
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1
 ```
 
-iOS simulator dapat memakai `http://localhost:3000/api/v1`.
+The example targets an Android emulator. For an iOS simulator use `http://localhost:3000/api/v1`. For a physical phone, supply the dashboard computer's reachable LAN address. Verify the dashboard's `/api/health` endpoint from the device first. Release deployments require HTTPS.
 
-## Verifikasi
+The backend is maintained in [vamos-ops-dashboard](https://github.com/VincentiusKennedyW/vamos-ops-dashboard). In the integrated workspace, the shared API contract lives at `../../packages/contracts/openapi.yaml` and architecture documentation at `../../docs`.
 
-```bash
+## Verification
+
+```sh
 flutter analyze
 flutter test
-flutter build apk --debug --dart-define=API_BASE_URL=http://192.168.1.4:3000/api/v1
+flutter build apk --debug
 ```
+
+Tests cover authentication, device-service injection, widgets, task/report interactions, pagination, request counts, cache behavior, and optimistic rollback. Shared fixtures live under `test/support`; test suites do not import another test suite.
+
+For device acceptance: sign in, clock in with selfie/location, change task period/status, paginate, start/complete a task with evidence, create a report, open its detail, and clock out. Verify explicit refresh and logout clear the expected session state. The debug APK is written to `build/app/outputs/flutter-apk/app-debug.apk`.

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:vamos_ops_mobile/app/data/repositories/ops_repository.dart';
+import 'package:vamos_ops_mobile/app/data/models/ops_area.dart';
+import 'package:vamos_ops_mobile/app/data/repositories/ops_repository_contract.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/views/report_form_sheet.dart';
 import 'package:vamos_ops_mobile/app/modules/staff/controllers/staff_controller.dart';
-import 'package:vamos_ops_mobile/vamos_app.dart';
-import 'staff_controller_test.dart' show FakeOpsRepository;
-import 'cache_period_camera_test.dart' show TrackingCamera;
+
+import 'support/fake_ops_repository.dart' show FakeOpsRepository;
+import 'support/tracking_camera.dart' show TrackingCamera;
 
 class AreaFormRepository extends FakeOpsRepository
     implements AreasRepositoryContract {

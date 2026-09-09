@@ -1,7 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-
-import '../errors/api_exception.dart';
+import 'package:vamos_ops_mobile/app/core/errors/api_exception.dart';
 
 class DevicePosition {
   const DevicePosition({required this.latitude, required this.longitude});

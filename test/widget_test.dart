@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:vamos_ops_mobile/app/data/repositories/ops_repository.dart';
 import 'package:vamos_ops_mobile/app/core/services/device_services.dart';
+import 'package:vamos_ops_mobile/app/core/theme/app_tokens.dart';
+import 'package:vamos_ops_mobile/app/data/models/staff_home_data.dart';
+import 'package:vamos_ops_mobile/app/data/repositories/ops_repository_contract.dart';
+import 'package:vamos_ops_mobile/app/modules/tasks/models/ops_task.dart';
 import 'package:vamos_ops_mobile/app/routes/app_routes.dart';
-import 'package:vamos_ops_mobile/data.dart';
-import 'package:vamos_ops_mobile/vamos_app.dart';
+import 'package:vamos_ops_mobile/app/vamos_app.dart';
 
 void main() {
   test('selected filter chip uses a readable brand color pair', () {

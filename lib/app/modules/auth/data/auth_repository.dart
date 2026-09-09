@@ -1,10 +1,9 @@
 import 'package:get/get.dart' show Response;
-
-import '../../../core/config/app_config.dart';
-import '../../../core/errors/api_exception.dart';
-import '../../../core/storage/session_store.dart';
-import '../models/auth_session.dart';
-import 'auth_api_provider.dart';
+import 'package:vamos_ops_mobile/app/core/config/app_config.dart';
+import 'package:vamos_ops_mobile/app/core/errors/api_exception.dart';
+import 'package:vamos_ops_mobile/app/core/storage/session_store.dart';
+import 'package:vamos_ops_mobile/app/modules/auth/data/auth_api_provider.dart';
+import 'package:vamos_ops_mobile/app/modules/auth/models/auth_session.dart';
 
 abstract interface class AuthRepositoryContract {
   Future<AuthSession?> restore();

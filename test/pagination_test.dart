@@ -1,19 +1,16 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vamos_ops_mobile/app/core/errors/api_exception.dart';
-import 'package:vamos_ops_mobile/app/data/repositories/ops_repository.dart';
+import 'package:vamos_ops_mobile/app/data/models/ops_page.dart';
+import 'package:vamos_ops_mobile/app/data/repositories/ops_repository_contract.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/models/ops_report.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/models/report_evidence.dart';
 import 'package:vamos_ops_mobile/app/modules/staff/controllers/staff_controller.dart';
-import 'package:vamos_ops_mobile/data.dart';
-import 'staff_controller_test.dart' show FakeOpsRepository;
+import 'package:vamos_ops_mobile/app/modules/tasks/models/ops_task.dart';
 
-OpsTask task(String id) => OpsTask(
-  id: id,
-  title: id,
-  area: 'Venue',
-  time: '08:00',
-  kind: TaskKind.routine,
-  state: TaskState.pending,
-);
+import 'support/fake_ops_repository.dart' show FakeOpsRepository;
+import 'support/task_fixture.dart';
 
 class PagedFake extends FakeOpsRepository
     implements PagedOpsRepositoryContract, ReportDetailRepositoryContract {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../../../vamos_app.dart';
+import 'package:vamos_ops_mobile/app/core/theme/app_tokens.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -44,14 +43,14 @@ class SplashScreen extends StatelessWidget {
                   height: 26,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.4,
-                    color: vamosGreen,
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   'VAMOS OPS',
                   style: TextStyle(
-                    color: ink,
+                    color: AppColors.onSurface,
                     fontSize: AppText.base,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2.1,
@@ -60,7 +59,10 @@ class SplashScreen extends StatelessWidget {
                 const SizedBox(height: 5),
                 const Text(
                   'Menyiapkan operasional venue',
-                  style: TextStyle(color: muted, fontSize: AppText.base),
+                  style: TextStyle(
+                    color: AppColors.onSurfaceMuted,
+                    fontSize: AppText.base,
+                  ),
                 ),
               ],
             ),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../../vamos_app.dart';
-import '../controllers/auth_controller.dart';
+import 'package:vamos_ops_mobile/app/core/theme/app_tokens.dart';
+import 'package:vamos_ops_mobile/app/modules/auth/controllers/auth_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return Scaffold(
-      backgroundColor: canvas,
+      backgroundColor: AppColors.surfaceSunken,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -68,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'Selamat datang',
                       style: TextStyle(
-                        color: ink,
+                        color: AppColors.onSurface,
                         fontSize: AppText.hero,
                         fontFamily: AppText.displayFamily,
                         height: 1.05,
@@ -80,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'Masuk dengan akun staff VAMOS OPS untuk memulai aktivitas.',
                       style: TextStyle(
-                        color: muted,
+                        color: AppColors.onSurfaceMuted,
                         fontSize: AppText.md,
                         height: 1.45,
                       ),
@@ -185,16 +184,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
-                                            color: danger.withValues(
+                                            color: AppColors.danger.withValues(
                                               alpha: 0.08,
                                             ),
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
                                             border: Border.all(
-                                              color: danger.withValues(
-                                                alpha: 0.22,
-                                              ),
+                                              color: AppColors.danger
+                                                  .withValues(alpha: 0.22),
                                             ),
                                           ),
                                           child: Row(
@@ -203,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             children: [
                                               const Icon(
                                                 Icons.error_outline_rounded,
-                                                color: danger,
+                                                color: AppColors.danger,
                                                 size: 18,
                                               ),
                                               const SizedBox(width: 9),
@@ -213,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                       .errorMessage
                                                       .value!,
                                                   style: const TextStyle(
-                                                    color: danger,
+                                                    color: AppColors.danger,
                                                     fontSize: AppText.base,
                                                     fontWeight: FontWeight.w700,
                                                   ),
@@ -241,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             height: 21,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2.2,
-                                              color: ink,
+                                              color: AppColors.onSurface,
                                             ),
                                           )
                                         : const Text(
@@ -260,16 +258,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shield_outlined, size: 16, color: muted),
+                        Icon(
+                          Icons.shield_outlined,
+                          size: 16,
+                          color: AppColors.onSurfaceMuted,
+                        ),
                         SizedBox(width: 7),
-                        // Flexible so the line wraps under large text
+                        // Flexible so the AppColors.border wraps under large text
                         // settings instead of overflowing the row.
                         Flexible(
                           child: Text(
                             'Sesi terenkripsi · VAMOS Arena Fit',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: muted,
+                              color: AppColors.onSurfaceMuted,
                               fontSize: AppText.sm,
                             ),
                           ),

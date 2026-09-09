@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
-
-import '../../../core/config/app_config.dart';
+import 'package:vamos_ops_mobile/app/core/config/app_config.dart';
 
 class AuthApiProvider extends GetConnect {
   @override

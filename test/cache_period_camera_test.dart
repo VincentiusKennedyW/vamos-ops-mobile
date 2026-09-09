@@ -1,12 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vamos_ops_mobile/app/core/services/ops_cache.dart';
-import 'package:vamos_ops_mobile/app/core/services/device_services.dart';
-import 'package:vamos_ops_mobile/app/data/repositories/ops_repository.dart';
+import 'package:vamos_ops_mobile/app/data/models/ops_area.dart';
+import 'package:vamos_ops_mobile/app/data/models/ops_page.dart';
+import 'package:vamos_ops_mobile/app/data/repositories/ops_repository_contract.dart';
+import 'package:vamos_ops_mobile/app/modules/reports/models/ops_report.dart';
 import 'package:vamos_ops_mobile/app/modules/staff/controllers/staff_controller.dart';
-import 'package:vamos_ops_mobile/data.dart';
-import 'staff_controller_test.dart' show FakeOpsRepository;
-import 'pagination_test.dart' show task;
+import 'package:vamos_ops_mobile/app/modules/tasks/models/ops_task.dart';
+
+import 'support/fake_ops_repository.dart' show FakeOpsRepository;
+import 'support/task_fixture.dart' show task;
+import 'support/tracking_camera.dart';
 
 class PeriodRepository extends FakeOpsRepository
     implements PagedOpsRepositoryContract, AreasRepositoryContract {
@@ -35,19 +40,6 @@ class PeriodRepository extends FakeOpsRepository
   Future<List<OpsArea>> getAreas() async => [
     const OpsArea('area-1', 'Court 1'),
   ];
-}
-
-class TrackingCamera implements CameraServiceContract {
-  final frontRequests = <bool>[];
-  @override
-  Future<CapturedPhoto?> capturePhoto({bool frontCamera = false}) async {
-    frontRequests.add(frontCamera);
-    return const CapturedPhoto(
-      path: '/tmp/test.jpg',
-      name: 'test.jpg',
-      mimeType: 'image/jpeg',
-    );
-  }
 }
 
 void main() {
